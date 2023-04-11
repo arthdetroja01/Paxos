@@ -77,7 +77,7 @@ class Node:
 
     def send_message(self, peer, message):
         global logse
-        time.sleep(random.uniform(1, 0.1))
+        time.sleep(random.uniform(1, 2))
         # print("***********"+str(peer)+"*************")
         peer.receive_message(message)
         return 
