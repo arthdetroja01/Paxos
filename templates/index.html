@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<title>Object Distribution</title>
+	<style type="text/css">
+		body {
+			margin: 0;
+			padding: 0;
+		}
+
+		.container {
+			position: relative;
+			width: 100vw;
+			height: 100vh;
+			background-color: #f2f2f2;
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: space-evenly;
+			align-items: center;
+		}
+
+      .newContainer {
+         position: relative;
+         width: 70vw;
+         height: 70vh;
+         background-color: #b42121;
+         display: flex;
+         flex-wrap: wrap;
+         justify-content: space-evenly;
+         align-items: center;
+      }
+
+		.object  {
+			position: absolute;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			width: 80px;
+			height: 80px;
+			background-color: #fff;
+			border-radius: 50%;
+			border: 1px solid #999;
+			font-size: 20px;
+		}
+
+      .object form {
+         position: absolute;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			width: 80px;
+			height: 80px;
+			background-color: #fff;
+			border-radius: 50%;
+			border: 1px solid #999;
+			font-size: 20px;
+      }
+
+
+		.object:nth-child(1) {
+			top: 0;
+			left: 0;
+		}
+
+		.object:nth-child(2) {
+			top: 0;
+			right: 0;
+		}
+
+		.object:nth-child(3) {
+			bottom: 0;
+			left: 0;
+		}
+
+		.object:nth-child(4) {
+			bottom: 0;
+			right: 0;
+		}
+
+		.object:nth-child(5) {
+			top: 0;
+			left: calc(50% - 40px);
+		}
+
+		.object:nth-child(6) {
+			top: 0;
+			left: calc(25% - 40px);
+		}
+
+		.object:nth-child(7) {
+			top: 0;
+			right: calc(25% - 40px);
+		}
+
+		.object:nth-child(8) {
+			bottom: 0;
+			left: calc(50% - 40px);
+		}
+
+		.object:nth-child(9) {
+			bottom: 0;
+			left: calc(25% - 40px);
+		}
+
+		.object:nth-child(10) {
+			bottom: 0;
+			right: calc(25% - 40px);
+		}
+
+		.center {
+			position: absolute;
+			top: calc(50% - 80px);
+			left: calc(50% - 80px);
+			width: 160px;
+			height: 160px;
+			background-color: #f2f2f2;
+			border-radius: 50%;
+			border: 1px solid #999;
+		}
+	</style>
+	
+</head>
+<body>
+	<div class="container">
+		<div class="object">1<button onclick="submit(1)">Submit</button></div>
+		<div class="object">2<button onclick="submit(2)">Submit</button></div>
+		<div class="object">3<button onclick="submit(3)">Submit</button></div>
+		<div class="object">4<button onclick="submit(4)">Submit</button></div>
+		<div class="object">5<button onclick="submit(5)">Submit</button></div>
+		<div class="object">6<button onclick="submit(6)">Submit</button></div>
+		<div class="object">7<button onclick="submit(7)">Submit</button></div>
+		<div class="object">8<button onclick="submit(8)">Submit</button></div>
+		<div class="object">9<button onclick="submit(9)">Submit</button></div>
+		<div class="object">10<button onclick="submit(10)">Submit</button></div>
+		<div class="newContainer">
+		
+			<style>
+				#log {
+					width: 500px; /* set the width of the box */
+					height: 300px; /* set the height of the box */
+					overflow-y: scroll; /* add a vertical scrollbar when content overflows */
+					white-space: pre-wrap; /* wrap the text when it reaches the end of the line */
+				}
+			</style>
+			<pre id="log"></pre>
+			<!-- <div class="object">9<button onclick="submit(9)">Submit</button></div> -->
+			 <script>
+				setInterval(function() {
+					$.ajax({
+					url: '/logs',
+					type: 'GET',
+					dataType: 'text',
+					success: function(data) {
+						// Append the new logs to the existing logs
+						let text = data.replace(/\n/g, "<br>");
+						// let text = "";
+						// for(let i = 0; i < data.length; i++){
+						// 	text += data[i];
+						// }
+						text += "<br>"
+						document.getElementById("log").innerHTML = text;
+					}
+					});
+				}, 1000);
+			 </script>
+			 
+		  </div>
+		</div>
+	
+   <form id="myForm" action="/" method="post">
+      <input name="dataInput" type="hidden" id="dataInput"><br>
+      <!-- Last name: <input type="text" name="lname"><br><br> -->
+      <!-- <button type="submit"></button> -->
+   </form>
+   
+	<script type="text/javascript">
+      function submit(number){
+		   var form = document.getElementById("myForm");
+    // Execute a POST request with the specified number
+    // ...
+         if (number == 1) {
+            form.dataInput.value = "1";
+            console.log(form.dataInput.value)
+            form.submit();
+         }
+         else if(number == 2){
+            form.dataInput.value = "2";
+            console.log(form.dataInput.value)
+            form.submit();
+         }
+         else if(number == 3){
+            form.dataInput.value = "3";
+            console.log(form.dataInput.value)
+            form.submit();
+         }
+         else if(number == 4){
+            form.dataInput.value = "4";
+            console.log(form.dataInput.value)
+            form.submit();
+         }
+         else if(number == 5){
+            form.dataInput.value = "5";
+            console.log(form.dataInput.value)
+            form.submit();
+         }
+         else if(number == 6){
+            form.dataInput.value = "6";
+            console.log(form.dataInput.value)
+            form.submit();
+         }
+         else if(number == 7){
+            form.dataInput.value = "7";
+            console.log(form.dataInput.value)
+            form.submit();
+         }
+         else if(number == 8){
+            form.dataInput.value = "8";
+            console.log(form.dataInput.value)
+            form.submit();
+         }
+         else if(number == 9){
+            form.dataInput.value = "9";
+            console.log(form.dataInput.value)
+            form.submit();
+         }
+         else if(number == 10){
+            form.dataInput.value = "10";
+            console.log(form.dataInput.value)
+            form.submit();
+         }
+		}
+	</script>
+</body>
+</html>
+
