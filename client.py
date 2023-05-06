@@ -40,11 +40,12 @@ class Node:
         self.lock = threading.Lock()
     
     def set_peers(self, peers):
+        # print("Setting peers")
         self.peers = peers
         return
 
     def status(self):
-        print("address: " + str(self.address))
+        print("address: " + str(self.ip))
         print("timestamp: " + str(timestamp))
         print("promise_count: " + str(self.promise_count))
         print("accept_count: " + str(self.accept_count))
@@ -53,6 +54,7 @@ class Node:
 
     def propose_value(self, message):
         # self.timestamp += 1
+        # print("Proposing value")
         global logs
         global timestamp
         self.accepted = False
@@ -68,7 +70,7 @@ class Node:
             'sender_ip': self.ip,
             'sender_port': self.port,
         }
-        # print(f"Node {self.id} proposed value {message}\n")
+        # print(f"Node {self.ip} proposed value {message}\n")
         # print("Printing the logs generated!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         # print(logs)
         logs.append(f"Node {self.ip} proposed value {message}\n")
@@ -77,10 +79,11 @@ class Node:
         return
 
     def send_propose_messages(self, message):
+        # print("Sending propose messages")
         global logs
         for peer in self.peers:
-            # print(f"Node {self.id} sent propose message to Node {peer.id} with timestamp {message['timestamp']} \n")
-            # logs.append(f"Node {self.id} sent propose message to Node {peer.id} with timestamp {message['timestamp']} \n")
+            # print(f"Node {self.ip} sent propose message to Node {peer[1]} with timestamp {message['timestamp']} \n")
+            logs.append(f"Node {self.ip} sent propose message to Node {peer[1]} with timestamp {message['timestamp']} \n")
             
             thread = Thread(target=self.send_message, args=(peer, message))
             thread.start()
@@ -88,14 +91,18 @@ class Node:
             # thread.join()
 
     def send_message(self, peer, message):
-        # global logs
-        peer_ip = peer.ip
-        peer_port = peer.port
+        print("Sending message")
+        global logs
+        peer_ip = peer[0]
+        peer_port = peer[1]
+        print("Printing the peers")
+        print(peer[0], peer[1])
         self.socket.sendto(json.dumps(message).encode(), (peer_ip, peer_port))
         return
     
     def receive_message(self, message):
-        # global logs
+        # print("Receiving message")
+        global logs
         with self.lock:
             if message['type'] == 'propose':
                 self.receive_propose_message(message)
@@ -114,6 +121,7 @@ class Node:
             #     self.handle_commit_message(message)
     
     def receive_propose_message(self, message):
+        # print("Receiving propose message")
         global logs
         if message['timestamp'] >= timestamp:
             # print(f"Received the proposed message from {message['sender']} and replying promise\n")
@@ -125,11 +133,13 @@ class Node:
                 'sender_ip': self.ip,
                 'sender_port': self.port
             }
-            self.send_message(nodes[message['sender_ip']], promise_message)
-            self.socket.sendto(promise_message.encode(), (nodes[message['sender_ip']], nodes[message['sender_port']]))
+            # self.send_message(nodes[message['sender_ip']], promise_message)
+            print(nodes[message['sender_ip']], nodes[message['sender_port']])
+            self.socket.sendto(json.dumps(promise_message).encode(), (nodes[message['sender_ip']], nodes[message['sender_port']]))
         return
     
     def receive_promise_message(self, message):
+        # print("Receiving promise message")
         global logs
         if self.accepted:
             # print("Already accepted!!")
@@ -140,7 +150,7 @@ class Node:
         self.promise_count = cnt
         # print("*******" + str(self.promise_count) + "*******")
         # self.lock.release() 
-        # print(f"Received the promise method from {message['sender']} to {self.id} and count is {self.promise_count} \n")
+        # print(f"Received the promise method from {message['sender']} to {self.ip} and count is {self.promise_count} \n")
         logs.append(f"Received the promise method from {message['sender']} to {self.ip} and count is {self.promise_count} \n")
         
         accept_message = {
@@ -159,13 +169,14 @@ class Node:
         return 
     
     def send_accept_messages(self, message):
+        # print("Sending accept messages")
         global logs
         # print(f"Sending accept message to all the nodes \n")
         logs.append(f"Sending accept message to all the nodes \n")
         
         for peer in self.peers:
-            # print(f"Node {self.id} sent accept message to Node {peer.id} with timestamp {message['timestamp']} \n")
-            logs.append(f"Node {self.ip} sent accept message to Node {peer.ip} with timestamp {message['timestamp']} \n")
+            # print(f"Node {self.ip} sent accept message to Node {peer[1]} with timestamp {message['timestamp']} \n")
+            logs.append(f"Node {self.ip} sent accept message to Node {peer[0]} with timestamp {message['timestamp']} \n")
             
             thread = Thread(target=self.send_message, args=(peer, message))
             thread.start()
@@ -173,9 +184,10 @@ class Node:
         return
 
     def receive_accept_message(self, message):
+        # print("Receiving accept message")
         global logs
-        # print(f"Received the accept message from {message['sender']} to {self.id} \n")
-        logs.append(f"Received the accept message from {message['sender']} to {self.id} \n")
+        # print(f"Received the accept message from {message['sender']} to {self.ip} \n")
+        logs.append(f"Received the accept message from {message['sender']} to {self.ip} \n")
         
         if message['timestamp'] >= timestamp:
             accepted_message = {
@@ -184,11 +196,12 @@ class Node:
                 'sender_ip': self.ip,
                 'sender_port': self.port
             }
-            self.send_message(nodes[message['sender_ip']] , accepted_message)
-            self.socket.sendto(accepted_message.encode(), (nodes[message['sender_ip']], nodes[message['sender_port']]))
+            # self.send_message(nodes[message['sender_ip']] , accepted_message)
+            self.socket.sendto(json.dumps(accepted_message).encode(), (nodes[message['sender_ip']], nodes[message['sender_port']]))
         return
 
     def receive_accepted_message(self, message):  
+        # print("Receiving accepted message")
         global logs     
         if self.commited:
             return
@@ -208,6 +221,7 @@ class Node:
         return
 
     def commit(self, message):
+        # print("Committing")
         global logs
         # print(f"Quorum has been established and the message agreed upon is {message['message']}\n")
         logs.append(f"Quorum has been established and the message agreed upon is {message['message']}\n")
@@ -219,16 +233,17 @@ class Node:
             'sender_port': self.port
         }
         for peer in self.peers:
-            # print(f"Node {self.id} sent accept message to Node {peer.id} with timestamp {message['timestamp']} \n")
-            logs.append(f"Node {self.ip} sent accept message to Node {peer.ip} with timestamp {message['timestamp']} \n")
+            # print(f"Node {self.ip} sent accept message to Node {peer[1]} with timestamp {message['timestamp']} \n")
+            logs.append(f"Node {self.ip} sent accept message to Node {peer[0]} with timestamp {message['timestamp']} \n")
             
             thread = Thread(target=self.send_message, args=(peer, commit_message))
             thread.start()
         return
 
     def receive_commit_message(self, message):
+        print("Receiving commit message")
         global logs
-        # print(f"Received the commit message from {message['sender']} to {self.id} \n")
+        # print(f"Received the commit message from {message['sender']} to {self.ip} \n")
         logs.append(f"Received the commit message from {message['sender']} to {self.ip} \n")
         
         self.message = message['message']
@@ -237,10 +252,14 @@ class Node:
     def listen(self, node): 
         # listens for incoming Paxos messages on a separate thread 
         while True: 
-            buffer_size = 10240
-            message_bytes, address = node.socket.recvfrom(buffer_size) 
-            message = json.loads(message_bytes) 
-            node.receive_message(message)
+            buffer_size = 1024
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.bind((self.ip, 0))
+            message_bytes, address = sock.recvfrom(buffer_size) 
+            message = json.loads(message_bytes)
+            print("********************Printing the message: ") 
+            print(message)
+            self.receive_message(message)
 
 if __name__ == '__main__':
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -271,9 +290,11 @@ if __name__ == '__main__':
             
             data, address = sock.recvfrom(buffer_size)
             data_str = data.decode()
+            print("**********" + data_str + "**********")
             fields = data_str.split(';')
             client_list = json.loads(fields[0])
-            time_stamp = fields[1]
+            print(client_list)
+            time_stamp = int(fields[1])
             total = int(fields[2])
 
             # Print the individual fields
@@ -289,14 +310,22 @@ if __name__ == '__main__':
                 node = Node(ip, port)
                 nodes.append(node)
                 #Starts thread for each of the client
-                if(ip == ip_address and port == port_number):
-                    curr_node = Node(ip_address, port_number)
-                    thread = Thread(target=curr_node.listen, args=(node))
-                    thread.start()
+                # if(ip == ip_address and port == port_number):
+                # curr_node = Node(ip_address, port_number)
+                thread = Thread(target=node.listen, args=(node,))
+                thread.start()
 
-            for i in range(len(nodes)):
-                nodes[i].set_peers(nodes[:i] + nodes[i+1:])
-
+            
+            peers_list = []
+            for ip, port in client_list:
+                peers_list.append((ip, port))
+            peers_list.remove((ip_address, port_number))
+            print("Printing the client list: ///////////////////////////////////////")
+            print(peers_list)
+            curr_node = Node(ip_address, port_number)
+            curr_node.set_peers(peers_list)
+            curr_node.propose_value(message)
+            print(logs)
 
         elif option == 2:
             message = b'Delete me'
@@ -304,6 +333,6 @@ if __name__ == '__main__':
             break
 
 """
-Last done: Added the algorithm in the code. Now understand the code and make the nodes the physical clients 
-and then connect them with each other.
+Last done: Connected the nodes of differnt address, now need to resolve the threads of different nodes that they working
+perfectly by sending and receiving the messages 
 """
