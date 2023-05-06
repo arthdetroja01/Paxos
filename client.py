@@ -244,8 +244,12 @@ class Node:
 
 if __name__ == '__main__':
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind(('0.0.0.0', 0))
-    remote_address = ('localhost', 1234)
+    hostname = socket.gethostname()
+
+    # Get the IP address of the local machine
+    ip_address = socket.gethostbyname(hostname)
+    sock.bind((ip_address, 0))
+    remote_address = (ip_address, 1234)
 
     message = b'Hello world'
     sock.sendto(message, remote_address)

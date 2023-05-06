@@ -8,8 +8,9 @@ total = 0
 if __name__ == '__main__':
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind(('localhost', 1234))
-
+    hostname = socket.gethostname()
+    ip_address = socket.gethostbyname(hostname)
+    sock.bind((ip_address, 1234))
     while True:
         buffer_size = 1024
         data, address = sock.recvfrom(buffer_size)
