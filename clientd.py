@@ -258,8 +258,6 @@ class Node:
             buffer_size = 1024
             print("##################### Listening #####################")            
             message_bytes, address = sock.recvfrom(buffer_size) 
-            if node[0] != address[0] or node[1] != address[1]:
-                continue
             message = json.loads(message_bytes)
             print("********************Printing the message: ") 
             print(message)
@@ -279,64 +277,66 @@ if __name__ == '__main__':
    #  data, address = sock.recvfrom(4096)
    #  client_list = json.loads(data.decode())
 
-    while True:
-        message = b'Fetch list'
+    # while True:
+    message = b'Fetch list'
 
-        sock.sendto(message, remote_address)
-        buffer_size = 4096    
-        data, address = sock.recvfrom(buffer_size)
-        data_str = data.decode()
-        # print("**********" + data_str + "**********")
-        fields = data_str.split(';')
-        client_list = json.loads(fields[0])
-        print(client_list)
-        time_stamp = int(fields[1])
-        total = int(fields[2])
-        nodes = []
-        #timestamp = 0
-        cnt = 0
-        ip_address, port_number = sock.getsockname()
-        for ip, port in client_list:
-            node = Node(ip, port)
-            nodes.append(node)
-            #Starts thread for each of the client
-            # if(ip == ip_address and port == port_number):
-            # curr_node = Node(ip_address, port_number)
-            # thread_started = threading.Event()
-            thread = Thread(target=node.listen, args=(node,))
-            thread.start()
-            # thread_started.wait()
-        
-        peers_list = []
-        for ip, port in client_list:
-            peers_list.append((ip, port))
-        peers_list.remove((ip_address, port_number))
-        print("Printing the client list: ///////////////////////////////////////")
-        print(peers_list)
-        curr_node = Node(ip_address, port_number)
-        curr_node.set_peers(peers_list)
+    sock.sendto(message, remote_address)
+    buffer_size = 4096    
+    data, address = sock.recvfrom(buffer_size)
+    data_str = data.decode()
+    # print("**********" + data_str + "**********")
+    fields = data_str.split(';')
+    client_list = json.loads(fields[0])
+    print(client_list)
+    time_stamp = int(fields[1])
+    total = int(fields[2])
+    nodes = []
+    #timestamp = 0
+    cnt = 0
+    ip_address, port_number = sock.getsockname()
+    for ip, port in client_list:
+        node = Node(ip, port)
+        nodes.append(node)
+        #Starts thread for each of the client
+        # if(ip == ip_address and port == port_number):
+        # curr_node = Node(ip_address, port_number)
+        # thread_started = threading.Event()
+        thread = Thread(target=node.listen, args=(node,))
+        thread.start()
+        # thread_started.wait()
+    
+    peers_list = []
+    for ip, port in client_list:
+        peers_list.append((ip, port))
+    peers_list.remove((ip_address, port_number))
+    print("Printing the client list: ///////////////////////////////////////")
+    print(peers_list)
+    curr_node = Node(ip_address, port_number)
+    curr_node.set_peers(peers_list)
 
-        print("Enter appropriate option:")
-        print("1. Ask for consensus")
-        print("2. Leave the system")
-        option = int(input("Enter option: "))
-        if option == 1:           
+        # print("Enter appropriate option:")
+        # print("1. Ask for consensus")
+        # print("2. Leave the system")
+        # option = int(input("Enter option: "))
+        # if option == 1:
+            
 
-            message = input("Enter message: ")                   
+        #     message = input("Enter message: ")
+                    
 
-            # Print the individual fields
-            # print(client_list)
-            # print(time_stamp)
-            # print(total)
+        #     # Print the individual fields
+        #     # print(client_list)
+        #     # print(time_stamp)
+        #     # print(total)
             
             
-            curr_node.propose_value(message)
-            print(logs)
+        #     curr_node.propose_value(message)
+        #     print(logs)
 
-        elif option == 2:
-            message = b'Delete me'
-            sock.sendto(message, remote_address)
-            break
+        # elif option == 2:
+        #     message = b'Delete me'
+        #     sock.sendto(message, remote_address)
+        #     break
 
 """
 Last done: Connected the nodes of differnt address, now need to resolve the threads of different nodes that they working
