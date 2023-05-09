@@ -252,6 +252,8 @@ class Node:
     def listen(self, node): 
         # listens for incoming Paxos messages on a separate thread 
         print("##################### Started the thread #####################")
+        print(node)
+        # print(node[0], node[1])
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((self.ip, 0))
         while True: 
@@ -309,8 +311,8 @@ if __name__ == '__main__':
     for ip, port in client_list:
         peers_list.append((ip, port))
     peers_list.remove((ip_address, port_number))
-    print("Printing the client list: ///////////////////////////////////////")
-    print(peers_list)
+    # print("Printing the client list: ///////////////////////////////////////")
+    # print(peers_list)
     curr_node = Node(ip_address, port_number)
     curr_node.set_peers(peers_list)
 

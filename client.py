@@ -20,6 +20,7 @@ import pickle
 """
 
 client_list = []
+remote_address = ('0.0.0.0', 0)
 total = 0
 logs = []
 timestamp = 0
@@ -250,90 +251,136 @@ class Node:
         return 
 
     def listen(self, node): 
+        global client_list
+        global remote_address
+        global total
+        global timestamp
         # listens for incoming Paxos messages on a separate thread 
-        print("##################### Started the thread #####################")
+        # print("##################### Started the thread #####################")
+        # print(node.ip, node.port)
+
+        #Starting the background thread to listen to the incoming messages
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((self.ip, 0))
         while True: 
             buffer_size = 1024
-            print("##################### Listening #####################")            
+            # print("##################### Listening #####################")            
             message_bytes, address = sock.recvfrom(buffer_size) 
-            if node[0] != address[0] or node[1] != address[1]:
+
+            #IF the message is from the server then do the operation according to it so that the queue can be cleared and 
+            #further messages can be processed.
+            if address[0] == remote_address[0] and address[1] == remote_address[1]:
+                data_str = message_bytes.decode()
+                fields = data_str.split(';')
+                new_client_list = json.loads(fields[0])
+                print(client_list)
+                timestamp = int(fields[1])
+                total = int(fields[2])
+
+                for ip, port in new_client_list:
+                    if (ip, port) in client_list:
+                        continue
+                    else:
+                        client_list.append((ip, port))
+                        node = Node(ip, port)
+                        client_list.append((ip, port))                        
+                        thread = Thread(target=node.listen, args=(node),)
+                        thread.start()
+                peers_list = client_list
+                peers_list.remove((self.ip, self.port))
+                self.peers = peers_list
                 continue
-            message = json.loads(message_bytes)
-            print("********************Printing the message: ") 
-            print(message)
-            self.receive_message(message)
+            elif node.ip != address[0] or node.port != address[1]:
+                #If the node ip does not match with the incoming messages address then ignore it as some other thread will pick it up.
+                continue
+            else:
+                #If the message is sent by the intended address then decode it and then forward it to the receive message function
+                message = json.loads(message_bytes.decode())
+                # print("********************Printing the message: ") 
+                # print(message)
+                self.receive_message(message)
 
 if __name__ == '__main__':
+    # global remote_address
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     hostname = socket.gethostname()
 
     # Get the IP address of the local machine
     ip_address = socket.gethostbyname(hostname)
     sock.bind((ip_address, 0))
+
+    #set the IP address of the server
     remote_address = (ip_address, 1234)
 
+    #Send hello world to the server to join the client list on the server
     message = b'Hello world'
     sock.sendto(message, remote_address)
    #  data, address = sock.recvfrom(4096)
    #  client_list = json.loads(data.decode())
 
-    while True:
-        message = b'Fetch list'
+   #First fetch list request to get the list of client already on the network
+    message = b'Fetch list'
 
-        sock.sendto(message, remote_address)
-        buffer_size = 4096    
-        data, address = sock.recvfrom(buffer_size)
-        data_str = data.decode()
-        # print("**********" + data_str + "**********")
-        fields = data_str.split(';')
-        client_list = json.loads(fields[0])
-        print(client_list)
-        time_stamp = int(fields[1])
-        total = int(fields[2])
-        nodes = []
-        #timestamp = 0
-        cnt = 0
-        ip_address, port_number = sock.getsockname()
-        for ip, port in client_list:
-            node = Node(ip, port)
-            nodes.append(node)
-            #Starts thread for each of the client
-            # if(ip == ip_address and port == port_number):
-            # curr_node = Node(ip_address, port_number)
-            # thread_started = threading.Event()
-            thread = Thread(target=node.listen, args=(node,))
-            thread.start()
-            # thread_started.wait()
-        
-        peers_list = []
-        for ip, port in client_list:
-            peers_list.append((ip, port))
-        peers_list.remove((ip_address, port_number))
-        print("Printing the client list: ///////////////////////////////////////")
-        print(peers_list)
-        curr_node = Node(ip_address, port_number)
-        curr_node.set_peers(peers_list)
+    sock.sendto(message, remote_address)
+    buffer_size = 4096    
+    data, address = sock.recvfrom(buffer_size)
+    data_str = data.decode()
+    # print("**********" + data_str + "**********")
+    fields = data_str.split(';')
+    client_list = json.loads(fields[0])
+    print(client_list)
+    timestamp = int(fields[1])
+    total = int(fields[2])
+    nodes = []
+    #timestamp = 0
+    cnt = 0
+    ip_address, port_number = sock.getsockname()
+
+    #make the nodes of the clients received from the server
+    for ip, port in client_list:
+        node = Node(ip, port)
+        nodes.append(node)
+        #Starts thread for each of the client
+        # if(ip == ip_address and port == port_number):
+        # curr_node = Node(ip_address, port_number)
+        # thread_started = threading.Event()
+        thread = Thread(target=node.listen, args=(node,))
+        thread.start()
+        # thread_started.wait()
+    
+    #Set peers for the current node
+    peers_list = []
+    for ip, port in client_list:
+        peers_list.append((ip, port))
+    peers_list.remove((ip_address, port_number))
+    print("Printing the client list: ///////////////////////////////////////")
+    print(peers_list)
+    curr_node = Node(ip_address, port_number)
+    curr_node.set_peers(peers_list)
+
+    while True:        
 
         print("Enter appropriate option:")
         print("1. Ask for consensus")
         print("2. Leave the system")
         option = int(input("Enter option: "))
-        if option == 1:           
+        if option == 1:       
+            message = b'Fetch list'
+            sock.sendto(message, remote_address)    
 
             message = input("Enter message: ")                   
 
             # Print the individual fields
             # print(client_list)
-            # print(time_stamp)
+            # print(timestamp)
             # print(total)
             
-            
+            #Propose the value and start the paxos algortihm
             curr_node.propose_value(message)
             print(logs)
 
         elif option == 2:
+            #Remove the node from the server client list.
             message = b'Delete me'
             sock.sendto(message, remote_address)
             break
